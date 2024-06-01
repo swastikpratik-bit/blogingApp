@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
+import { createBlogInput, updateblogInput } from "@swastikpratik/blog-common";
 import { Hono } from "hono";
 import { verify } from 'hono/jwt';  
 
@@ -15,32 +16,47 @@ export const blogRouter = new Hono<{
 }>();
   
 
-
+// middleware
 blogRouter.use('/', async (c, next) => {
     console.log("here");
     
     const header = c.req.header("authorization") || "";
-    const user = await verify(header, c.env.JWT_SECRET);
-  
-    if (user) {
-        //@ts-ignore
-        // c.set('userId', user.id);
-        await next();
-    }
-    else {
-      c.status(403)
-      return c.json({
-        error : "unauthorized"  
-      })
+    try {
+        const user = await verify(header, c.env.JWT_SECRET);
+        if (user) {
+            //@ts-ignore
+            c.set('userId', user.id);
+            await next();
+        }
+        else {
+            c.status(403)
+            return c.json({
+                error : "unauthorized"  
+            })
+        }   
+    } catch (error) {
+        c.status(403)
+        return c.json({
+            error : "You are no logged in"   
+        })
     }
 })
   
 
-blogRouter.post('/', async(c) => {
+blogRouter.post('/', async (c) => {
 
-    console.log("here");
+
     const authorId = c.get("userId");
     const body = await c.req.json();
+
+    const { success } = createBlogInput.safeParse(body);
+
+    if (!success) {
+        c.status(411);
+        return c.json({
+        message : "Input format is not correct"
+        })
+    }
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate())
@@ -68,8 +84,9 @@ blogRouter.get("/bulk", async (c) => {
     return c.json(posts);
 })
 
-blogRouter.get('/:id', async(c) => {
-    const id  = c.req.param('id');
+blogRouter.get('/:id', async (c) => {
+    const id = c.req.param('id');
+    console.log(id);
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate())
@@ -94,9 +111,16 @@ blogRouter.get('/:id', async(c) => {
 
 
 blogRouter.put('/', async (c) => {
-
-
+    
     const body = await c.req.json();
+    const { success } = updateblogInput.safeParse(body);
+
+  if (!success) {
+    c.status(411);
+    return c.json({
+      message : "Input format is not correct"
+    })
+  }
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate())
@@ -113,7 +137,8 @@ blogRouter.put('/', async (c) => {
     })
 
     return c.json({
-        id: blog.id
+        id: blog.id,
+        message : "updated!"
     })
 })
 
