@@ -23,7 +23,7 @@ const SignupAuth = () => {
                 email: postInputs.email,
                 password : postInputs.password
             });
-            const jwt = res.data;
+            const {jwt} = res.data;
             localStorage.setItem("token", jwt);
             navigate("/blogs");
 
