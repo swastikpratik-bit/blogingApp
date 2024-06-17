@@ -10,12 +10,10 @@ export function formatDate(date: Date | string): string {
   
     // Use toLocaleDateString with 'en-GB' locale and the custom options
     return date.toLocaleDateString('en-GB', options);
-  }
+}
   
-  // Example usage
-  const date = new Date('2024-05-12');
-  console.log(formatDate(date)); // Outputs: 12 May 2024
-  
+
+
 
 
 export function capitalize(str : string) {

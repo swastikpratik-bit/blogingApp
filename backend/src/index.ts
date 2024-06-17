@@ -11,6 +11,9 @@ const app = new Hono<{
   }
 }>();
 app.use('/*', cors())
+// app.use( cors({
+//   origin: "https://bloging-app-git-master-swastikpratikbits-projects.vercel.app"
+// }))
 app.get('/', (c) => {
   return c.json({
     message: "root is working",
